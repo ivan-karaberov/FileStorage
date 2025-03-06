@@ -1,0 +1,11 @@
+services:
+    minio-server:
+        image: minio/minio
+        volumes:
+            - ~/minio_data:/data
+        ports:
+            - "9000:9000"
+        environment:
+            MINIO_ACCESS_KEY: admin
+            MINIO_SECRET_KEY: admin123456
+        command: server /data
