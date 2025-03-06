@@ -8,17 +8,14 @@ class BaseConfig(BaseSettings):
     )
 
 
-class KafkaConfig(BaseConfig):
-    model_config = SettingsConfigDict(env_prefix="kafka_")
-
-    host: str = "localhost"
-    port: int = 9092
-
-
 class MinioConfig(BaseConfig):
     model_config = SettingsConfigDict(env_prefix="minio_")
 
+    host: str
+    port: int
+    access_key: str
+    secret_key: str
+
 
 class Config(BaseSettings):
-    kafka: KafkaConfig = Field(default_factory=KafkaConfig)
     minio: MinioConfig = Field(default_factory=MinioConfig)
