@@ -1,10 +1,16 @@
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BASE_DIR = Path(__file__).parent.parent
+ENV_FILE = BASE_DIR / "config" / ".env"
+
+
 class BaseConfig(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file="config/.env", env_file_encoding="utf-8", extra="ignore"
+        env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
     )
 
 

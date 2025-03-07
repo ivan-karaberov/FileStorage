@@ -1,3 +1,3 @@
 from .config import Config
 
-config = Config()
+settings = Config()
