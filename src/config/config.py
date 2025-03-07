@@ -8,6 +8,21 @@ class BaseConfig(BaseSettings):
     )
 
 
+class DatabaseConfig(BaseConfig):
+    model_config = SettingsConfigDict(env_prefix="db_")
+
+    host: str
+    port: int
+    name: str
+    user: str
+    passwd: str
+    echo: bool = False
+
+    @property
+    def db_url(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:{self.passwd}@{self.host}:{self.port}/{self.name}"
+
+
 class MinioConfig(BaseConfig):
     model_config = SettingsConfigDict(env_prefix="minio_")
 
@@ -19,3 +34,4 @@ class MinioConfig(BaseConfig):
 
 class Config(BaseSettings):
     minio: MinioConfig = Field(default_factory=MinioConfig)
+    db: DatabaseConfig = Field(default_factory=DatabaseConfig)
