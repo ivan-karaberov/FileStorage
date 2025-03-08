@@ -1,27 +1,15 @@
 import logging
 from datetime import timedelta
-from abc import ABC, abstractmethod
 
 from minio.error import S3Error
+
+from src.storage.storage import S3Storage
+
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractS3Storage(ABC):
-    @abstractmethod
-    def upload_file(self, file: str, bucket_name: str, object_name: str) -> bool:
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_file_link(self, bucket_name: str, object_name: str) -> str | None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def delete_file(self, file: str, object_name: str) -> bool:
-        raise NotImplementedError
-
-
-class MinioStorage(AbstractS3Storage):
+class MinioS3Storage(S3Storage):
     def __init__(self, minio_client) -> None:
         self.minio_client = minio_client
 
@@ -41,10 +29,14 @@ class MinioStorage(AbstractS3Storage):
         except Exception as e:
             logger.error("An unexpected error occurred: %s", e)
             return False
-        
+
     def get_file_link(self, bucket_name: str, object_name: str) -> str | None:
         try:
-            link = self.minio_client.presigned_get_object(bucket_name, object_name, expires=timedelta(hours=12))
+            link = self.minio_client.presigned_get_object(
+                bucket_name=bucket_name,
+                object_name=object_name,
+                expires=timedelta(hours=12)
+            )
             return link
 
         except S3Error as e:
@@ -57,7 +49,7 @@ class MinioStorage(AbstractS3Storage):
 
     def delete_file(self, bucket_name: str, object_name: str) -> bool:
         try:
-            status = self.minio_client.remove_object(bucket_name, object_name)
+            self.minio_client.remove_object(bucket_name, object_name)
             return True
 
         except S3Error as e:
