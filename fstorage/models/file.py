@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import String, DateTime, TIMESTAMP, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base import Base
+from .base import Base
 
 
 class File(Base):

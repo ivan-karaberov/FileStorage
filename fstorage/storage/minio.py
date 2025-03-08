@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from minio.error import S3Error
 
-from src.storage.storage import S3Storage
+from .storage import S3Storage
 
 
 logger = logging.getLogger(__name__)
