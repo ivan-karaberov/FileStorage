@@ -4,6 +4,9 @@ from fastapi.responses import JSONResponse
 
 from api import router as api_router
 from exceptions.exceptions import APIException
+from config import settings
+
+settings.logger.configure_logging()
 
 app = FastAPI()
 

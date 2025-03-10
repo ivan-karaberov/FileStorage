@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 from pathlib import Path
 
@@ -59,7 +60,19 @@ class AppConfig(BaseSettings):
     }
 
 
+class LoggingConfig(BaseSettings):
+    logging_level: int = logging.INFO
+
+    def configure_logging(self):
+        logging.basicConfig(
+            level=self.logging_level,
+            datefmt="%Y-%m-%d %H:%M:%S",
+            format="[%(asctime)s.%(msecs)03d] %(module)s:%(lineno)d %(levelname)s - %(message)s",
+        )
+
+
 class Config(BaseSettings):
     app: AppConfig = AppConfig()
+    logger: LoggingConfig = LoggingConfig()
     minio: MinioConfig = Field(default_factory=MinioConfig)
     db: DatabaseConfig = Field(default_factory=DatabaseConfig)
