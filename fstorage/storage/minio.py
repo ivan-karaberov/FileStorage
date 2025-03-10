@@ -1,3 +1,4 @@
+import io
 import logging
 from datetime import timedelta
 
@@ -13,12 +14,17 @@ class MinioS3Storage(S3Storage):
     def __init__(self, minio_client) -> None:
         self.minio_client = minio_client
 
-    def upload_file(self, file: str, bucket_name: str, object_name: str) -> bool:
+    def upload_file(
+        self, file: str | io.BytesIO, bucket_name: str, object_name: str, file_size: int
+    ) -> bool:
         try:
             if not self.minio_client.bucket_exists(bucket_name):
                 self.minio_client.make_bucket(bucket_name)
 
-            self.minio_client.fput_object(bucket_name, object_name, file)
+            if isinstance(file, str):
+                self.minio_client.fput_obect(bucket_name, object_name, file)
+            else:
+                self.minio_client.put_object(bucket_name, object_name, file, file_size)
 
             return True
 

@@ -1,9 +1,12 @@
+import io
 from abc import ABC, abstractmethod
 
 
 class S3Storage(ABC):
     @abstractmethod
-    def upload_file(self, file: str, bucket_name: str, object_name: str) -> bool:
+    def upload_file(
+        self, file: str | io.BytesIO, bucket_name: str, object_name: str, file_size: int
+    ) -> bool:
         raise NotImplementedError
 
     @abstractmethod
