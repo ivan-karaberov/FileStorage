@@ -1,3 +1,4 @@
+from typing import Union
 from pathlib import Path
 
 from pydantic import Field
@@ -36,8 +37,29 @@ class MinioConfig(BaseConfig):
     port: int
     access_key: str
     secret_key: str
+    secure: bool = False
+
+    @property
+    def minio_url(self) -> str:
+        return f"{self.host}:{self.port}"
+
+
+class AppConfig(BaseSettings):
+    file_upload_validation_settings: dict[str, dict[str, Union[int, list[str], bool]]] = {
+        "avatar": {
+            "max_length": 5 * 1024 * 1024,  # 5 MB
+            "allowed_formats": [".jpg", ".png"],
+            "is_public": True  # Affects permalink generation, not affect container settings
+        },
+        "video": {
+            "max_length": 100 * 1024 * 1024,  # 100 MB
+            "allowed_formats": [".mp4", ".mkv", ".mov", ".avi"],
+            "is_public": False  # Affects permalink generation, not affect container settings
+        }
+    }
 
 
 class Config(BaseSettings):
+    app: AppConfig = AppConfig()
     minio: MinioConfig = Field(default_factory=MinioConfig)
     db: DatabaseConfig = Field(default_factory=DatabaseConfig)
