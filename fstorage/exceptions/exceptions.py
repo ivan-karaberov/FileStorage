@@ -4,7 +4,7 @@ from fastapi import status
 
 
 class APIException(Exception):
-    status_code: Optional[int] = None
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail: Optional[str] = None
 
     def __str__(self):
