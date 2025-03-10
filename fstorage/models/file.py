@@ -17,7 +17,7 @@ class File(Base):
     object_name: Mapped[str] = mapped_column(
         String(40), unique=True, nullable=False
     )
-    backet_name: Mapped[str] = mapped_column(String(40), nullable=False)
+    bucket_name: Mapped[str] = mapped_column(String(40), nullable=False)
     upload_at: Mapped[DateTime] = mapped_column(
         TIMESTAMP(timezone=True), default=func.now(), server_default=func.now()
     )
