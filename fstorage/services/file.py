@@ -1,12 +1,14 @@
 import io
 import logging
+from datetime import timedelta
 
 from config import settings
 from repositories.file import FileRepository
 from models.file import File
 from storage.storage import S3Storage
 from schemas.file import ResponseUploadSchema
-from exceptions.exceptions import FileNotUploaded, FileNotFound, FileNotDeleted
+from exceptions.exceptions import FileNotUploaded, FileNotFound, FileNotDeleted, \
+                                    FailedLinkGeneration
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +63,23 @@ class FileService:
             )
         else:
             raise FileNotUploaded
+
+    async def get_file_link(self, bucket_name: str, object_id: str, ttl: timedelta):
+        file_obj = await self.file_repository.fetch_one(object_id=object_id)
+
+        if file_obj is None:
+            raise FileNotFound
+
+        link = self.storage_client.get_file_link(
+            bucket_name=bucket_name,
+            object_name=file_obj.object_name,
+            ttl=ttl
+        )
+
+        if link is None:
+            raise FailedLinkGeneration
+
+        return link
 
     async def delete_file(self, user_id: str, bucket_name: str, object_id: str) -> bool:
         file_obj = await self.file_repository.fetch_one(object_id=object_id)

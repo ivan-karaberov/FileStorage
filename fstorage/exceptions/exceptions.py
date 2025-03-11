@@ -39,3 +39,8 @@ class FileNotDeleted(APIException):
 class FileNotFound(APIException):
     status_code = status.HTTP_404_NOT_FOUND
     detail = "File not found"
+
+
+class FailedLinkGeneration(APIException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    detail = "Failed link generation"

@@ -1,5 +1,6 @@
 import io
 from abc import ABC, abstractmethod
+from datetime import timedelta
 
 
 class S3Storage(ABC):
@@ -10,7 +11,7 @@ class S3Storage(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_file_link(self, bucket_name: str, object_name: str) -> str | None:
+    def get_file_link(self, bucket_name: str, object_name: str, ttl: timedelta) -> str | None:
         raise NotImplementedError
 
     @abstractmethod
