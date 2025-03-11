@@ -2,17 +2,17 @@ import io
 import logging
 
 from config import settings
-from repositories.repository import Repository
+from repositories.file import FileRepository
 from models.file import File
 from storage.storage import S3Storage
 from schemas.file import ResponseUploadSchema
-from exceptions.exceptions import FileNotUploaded
+from exceptions.exceptions import FileNotUploaded, FileNotFound, FileNotDeleted
 
 logger = logging.getLogger(__name__)
 
 
 class FileService:
-    def __init__(self, file_repository: Repository, storage_client: S3Storage) -> None:
+    def __init__(self, file_repository: FileRepository, storage_client: S3Storage) -> None:
         self.storage_client = storage_client
         self.file_repository = file_repository
 
@@ -61,3 +61,27 @@ class FileService:
             )
         else:
             raise FileNotUploaded
+
+    async def delete_file(self, user_id: str, bucket_name: str, object_id: str) -> bool:
+        file_obj = await self.file_repository.fetch_one(object_id=object_id)
+
+        if file_obj is None:
+            raise FileNotFound
+
+        if await self.file_repository.delete_one(file_obj):
+            delete_status = self.storage_client.delete_file(bucket_name, file_obj.object_name)
+            if not delete_status:
+                logger.error("File Delete from db, but not delete from minio > %s", )
+                raise FileNotDeleted
+            logger.info(
+                "user -> %s | delete file from bucket -> %s | object_id -> %s",
+                user_id, bucket_name, object_id
+            )
+            return True
+        else:
+            logger.error(
+                "Failed delete metadata from db: \
+                user_id > %s | object_id > %s | obejct_name > %s",
+                user_id, object_id, file_obj.object_name
+            )
+            return False

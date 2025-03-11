@@ -29,3 +29,13 @@ class IncorrectFileFormat(APIException):
 class FileNotUploaded(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = "File not uploaded"
+
+
+class FileNotDeleted(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "File not deleted"
+
+
+class FileNotFound(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = "File not found"

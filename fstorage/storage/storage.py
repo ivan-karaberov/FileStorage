@@ -14,5 +14,5 @@ class S3Storage(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_file(self, file: str, object_name: str) -> bool:
+    def delete_file(self, bucket_name: str, object_name: str) -> bool:
         raise NotImplementedError
