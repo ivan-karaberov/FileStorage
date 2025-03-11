@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "fstorage", from = "src"}]
+package-mode = false
 
 
 [tool.poetry.group.dev.dependencies]

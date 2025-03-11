@@ -22,6 +22,15 @@ services:
         MINIO_SECRET_KEY: admin123456
     command: server /data
 
+  fstorage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    ports:
+      - "3001:3001"
+
 
 volumes:
   db_data:
