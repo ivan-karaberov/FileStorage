@@ -36,12 +36,12 @@ class MinioS3Storage(S3Storage):
             logger.error("An unexpected error occurred: %s", e)
             return False
 
-    def get_file_link(self, bucket_name: str, object_name: str) -> str | None:
+    def get_file_link(self, bucket_name: str, object_name: str, ttl: timedelta) -> str | None:
         try:
             link = self.minio_client.presigned_get_object(
                 bucket_name=bucket_name,
                 object_name=object_name,
-                expires=timedelta(hours=12)
+                expires=ttl
             )
             return link
 

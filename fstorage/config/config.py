@@ -59,6 +59,8 @@ class AppConfig(BaseSettings):
         }
     }
 
+    temporary_link_ttl: int = 12  # hours
+
 
 class LoggingConfig(BaseSettings):
     logging_level: int = logging.INFO

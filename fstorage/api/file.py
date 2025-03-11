@@ -2,16 +2,17 @@ import os
 import io
 import uuid
 import logging
+from datetime import timedelta
 
 from fastapi import APIRouter, File, Body, UploadFile, status
 from fastapi.exceptions import HTTPException
 
 from config import settings
 from dependencies.file import FileDependency
-from schemas.file import ResponseUploadSchema, ResponseDeleteSchema
+from schemas.file import ResponseUploadSchema, ResponseDeleteSchema, ResponseLinkSchema
 from exceptions.exceptions import APIException, IncorrectBucketName, IncorrectFileSize, \
                                     IncorrectFileFormat, FileNotUploaded, FileNotFound, \
-                                    FileNotDeleted
+                                    FileNotDeleted, FailedLinkGeneration
 
 logger = logging.getLogger(__name__)
 
@@ -118,8 +119,85 @@ async def upload_file(
         )
 
 
+@router.get(
+    path="/{bucket_name}/{object_id}",
+    responses={
+        400: {
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "detail": {
+                                "type": "string",
+                            }
+                        }
+                    },
+                    "examples": {
+                        "IncorrectBucketName": {
+                            "value": {"detail": IncorrectBucketName.detail}
+                        },
+                        "FailedLinkGeneration": {
+                            "value": {"detail": FailedLinkGeneration.detail}
+                        },
+                        "FileNotFound": {
+                            "value": {"detail": FileNotFound.detail}
+                        },
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "detail": {
+                                "type": "string",
+                                "example": "An unexpected error occurred. Failed generation link"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    summary="Generate temporary link",
+    response_description="Temporary link"
+)
+async def get_file_link(
+    bucket_name: str,
+    object_id: str,
+    file_service: FileDependency
+) -> ResponseLinkSchema:
+    bucket_settings = settings.app.file_upload_validation_settings.get(bucket_name)
+
+    # check bucket name
+    if bucket_settings is None:
+        raise IncorrectBucketName
+
+    try:
+        link = await file_service.get_file_link(
+            bucket_name,
+            object_id,
+            ttl=timedelta(hours=settings.app.temporary_link_ttl)
+        )
+        return ResponseLinkSchema(link=link)
+    except APIException as e:
+        raise e
+    except Exception as e:
+        logger.error("Failed generation link | error > %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred. Failed generation link"
+        )
+
+
 @router.delete(
-    path="/{bucket_name}/{object_name}",
+    path="/{bucket_name}/{object_id}",
     responses={
         400: {
             "description": "Bad Request",
@@ -166,8 +244,8 @@ async def upload_file(
     response_description="Operation status"
 )
 async def delete_file(
-    object_id: str,
     bucket_name: str,
+    object_id: str,
     file_service: FileDependency,
     user_id: str = Body(embed=True)
 ) -> ResponseDeleteSchema:

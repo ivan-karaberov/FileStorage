@@ -10,3 +10,7 @@ class ResponseUploadSchema(BaseModel):
 
 class ResponseDeleteSchema(BaseModel):
     status: bool
+
+
+class ResponseLinkSchema(BaseModel):
+    link: str
