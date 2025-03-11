@@ -3,14 +3,15 @@ import io
 import uuid
 import logging
 
-from fastapi import APIRouter, File, UploadFile, status
+from fastapi import APIRouter, File, Body, UploadFile, status
 from fastapi.exceptions import HTTPException
 
 from config import settings
 from dependencies.file import FileDependency
-from schemas.file import ResponseUploadSchema
+from schemas.file import ResponseUploadSchema, ResponseDeleteSchema
 from exceptions.exceptions import APIException, IncorrectBucketName, IncorrectFileSize, \
-                                    IncorrectFileFormat, FileNotUploaded
+                                    IncorrectFileFormat, FileNotUploaded, FileNotFound, \
+                                    FileNotDeleted
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ router = APIRouter()
 
 
 @router.post(
-    path="/{user_id}/{bucket_name}/upload",
+    path="/{bucket_name}/upload",
     responses={
         400: {
             "description": "Bad Request",
@@ -70,7 +71,10 @@ router = APIRouter()
     response_description="Object ID and Permanent link (if bucket is public)"
 )
 async def upload_file(
-    user_id: str, bucket_name: str, file_service: FileDependency, file: UploadFile = File(...)
+    bucket_name: str,
+    file_service: FileDependency,
+    user_id: str = Body(embed=True),
+    file: UploadFile = File(...)
 ) -> ResponseUploadSchema:
     bucket_settings = settings.app.file_upload_validation_settings.get(bucket_name)
 
@@ -111,4 +115,70 @@ async def upload_file(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred. File not uploaded"
+        )
+
+
+@router.delete(
+    path="/{bucket_name}/{object_name}",
+    responses={
+        400: {
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "detail": {
+                                "type": "string",
+                            }
+                        }
+                    },
+                    "examples": {
+                        "FileNotFound": {
+                            "value": {"detail": FileNotFound.detail}
+                        },
+                        "FileNotDeleted": {
+                            "value": {"detail": FileNotDeleted.detail}
+                        },
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "detail": {
+                                "type": "string",
+                                "example": "An unexpected error occurred. File not deleted"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    summary="Delete file from S3 Storage",
+    response_description="Operation status"
+)
+async def delete_file(
+    object_id: str,
+    bucket_name: str,
+    file_service: FileDependency,
+    user_id: str = Body(embed=True)
+) -> ResponseDeleteSchema:
+    try:
+        delete_status = await file_service.delete_file(user_id, bucket_name, object_id)
+        return ResponseDeleteSchema(status=delete_status)
+    except APIException as e:
+        raise e
+    except Exception as e:
+        logger.error("File not deleted | error > %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred. File not deleted"
         )
